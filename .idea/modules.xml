@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/cloud-storage.iml" filepath="$PROJECT_DIR$/cloud-storage.iml" />
+      <module fileurl="file://$PROJECT_DIR$/cloud-storage-client/cloud-storage-client.iml" filepath="$PROJECT_DIR$/cloud-storage-client/cloud-storage-client.iml" />
+      <module fileurl="file://$PROJECT_DIR$/cloud-storage-core/cloud-storage-core.iml" filepath="$PROJECT_DIR$/cloud-storage-core/cloud-storage-core.iml" />
+      <module fileurl="file://$PROJECT_DIR$/cloud-storage-server/cloud-storage-server.iml" filepath="$PROJECT_DIR$/cloud-storage-server/cloud-storage-server.iml" />
+    </modules>
+  </component>
+</project>

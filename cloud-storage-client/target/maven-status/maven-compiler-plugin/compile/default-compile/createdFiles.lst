@@ -1,0 +1,3 @@
+com\tlf\cloud\storage\client\CloudStorageService.class
+com\tlf\cloud\storage\client\impl\CloudStorageClient.class
+com\tlf\cloud\storage\client\impl\fallback\CloudStorageClientFallbackFactory.class
