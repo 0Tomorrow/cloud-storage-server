@@ -3,6 +3,7 @@ package com.tlf.cloud.storage.client.impl;
 import com.tlf.cloud.storage.client.impl.fallback.CloudStorageClientFallbackFactory;
 import com.tlf.cloud.storage.core.bo.req.IndexInfoReq;
 import com.tlf.cloud.storage.core.config.RemoteConfig;
+import com.tlf.common.lang.bo.RespBase;
 import org.springframework.cloud.netflix.feign.FeignClient;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -11,5 +12,5 @@ import org.springframework.web.bind.annotation.RequestMapping;
 public interface CloudStorageClient {
 
     @RequestMapping(value = "/index/root/create")
-    Boolean createRootIndex(@RequestBody IndexInfoReq indexInfoReq);
+    RespBase<Boolean> createRootIndex(@RequestBody IndexInfoReq indexInfoReq);
 }

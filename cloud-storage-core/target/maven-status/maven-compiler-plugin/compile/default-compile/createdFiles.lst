@@ -1,11 +1,11 @@
-com\tlf\cloud\storage\core\bo\req\FileInfoReq.class
-com\tlf\cloud\storage\core\bo\req\DoIndexReq.class
-com\tlf\cloud\storage\core\bo\resp\PreviewResp.class
 com\tlf\cloud\storage\core\bo\req\IndexInfoReq.class
 com\tlf\cloud\storage\core\enums\ErrorCode.class
+com\tlf\cloud\storage\core\bo\req\FileInfoReq.class
 com\tlf\cloud\storage\core\bo\resp\FileInfoResp.class
 com\tlf\cloud\storage\core\config\RemoteConfig.class
+com\tlf\cloud\storage\core\bo\req\DoIndexReq.class
 com\tlf\cloud\storage\core\bo\req\DoFileReq.class
 com\tlf\cloud\storage\core\bo\resp\IndexInfoResp.class
+com\tlf\cloud\storage\core\bo\resp\PreviewResp.class
 com\tlf\cloud\storage\core\enums\FileState.class
 com\tlf\cloud\storage\core\enums\FileType.class

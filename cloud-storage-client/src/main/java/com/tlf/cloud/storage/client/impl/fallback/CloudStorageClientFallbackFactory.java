@@ -1,7 +1,7 @@
 package com.tlf.cloud.storage.client.impl.fallback;
 
 import com.tlf.cloud.storage.client.impl.CloudStorageClient;
-import com.tlf.commonlang.fallback.MyHystrixClientFallbackFactory;
+import com.tlf.common.lang.fallback.MyHystrixClientFallbackFactory;
 import org.springframework.stereotype.Component;
 
 @Component

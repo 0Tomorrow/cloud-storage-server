@@ -10,8 +10,8 @@ import com.tlf.cloud.storage.server.repository.FileRepo;
 import com.tlf.cloud.storage.server.repository.IndexRepo;
 import com.tlf.cloud.storage.core.bo.req.IndexInfoReq;
 import com.tlf.cloud.storage.core.bo.resp.IndexInfoResp;
-import com.tlf.commonlang.exception.MyException;
-import com.tlf.commonlang.util.MyBeanUtils;
+import com.tlf.common.lang.exception.MyException;
+import com.tlf.common.lang.util.MyBeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -126,6 +126,7 @@ public class IndexService {
         }
     }
 
+    @Transactional
     public void createRootIndex(IndexInfoReq indexInfoReq) {
         Long account = indexInfoReq.getUpdateBy();
         String userPath = pathConfig.getUserPath(account);

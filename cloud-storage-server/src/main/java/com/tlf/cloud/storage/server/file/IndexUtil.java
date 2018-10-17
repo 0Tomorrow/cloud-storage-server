@@ -1,6 +1,6 @@
 package com.tlf.cloud.storage.server.file;
 
-import com.tlf.commonlang.exception.MyException;
+import com.tlf.common.lang.exception.MyException;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;

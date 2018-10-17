@@ -4,7 +4,7 @@ import com.tlf.cloud.storage.server.service.IndexService;
 import com.tlf.cloud.storage.core.bo.req.DoIndexReq;
 import com.tlf.cloud.storage.core.bo.req.IndexInfoReq;
 import com.tlf.cloud.storage.core.bo.resp.IndexInfoResp;
-import com.tlf.commonlang.bo.RespBase;
+import com.tlf.common.lang.bo.RespBase;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;

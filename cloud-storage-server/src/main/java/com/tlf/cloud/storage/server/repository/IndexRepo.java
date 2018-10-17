@@ -1,7 +1,7 @@
 package com.tlf.cloud.storage.server.repository;
 
 import com.tlf.cloud.storage.server.entity.TIndexInfo;
-import com.tlf.commondata.repository.MyRepository;
+import com.tlf.common.data.repository.MyRepository;
 import org.springframework.data.jpa.repository.Query;
 
 import java.util.List;

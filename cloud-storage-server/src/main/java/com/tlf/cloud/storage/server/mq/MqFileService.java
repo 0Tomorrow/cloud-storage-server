@@ -2,7 +2,7 @@ package com.tlf.cloud.storage.server.mq;
 
 import com.tlf.cloud.storage.server.bo.MqSliceInfo;
 import com.tlf.cloud.storage.server.service.FileService;
-import com.tlf.commonlang.util.JsonUtil;
+import com.tlf.common.lang.util.JsonUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.stream.annotation.StreamListener;
 import org.springframework.messaging.Message;

@@ -10,7 +10,7 @@ public interface MqProcessor {
 
     String FILE_MERGE_INPUT = "file_merge_input";
 
-    String FILE_MERGE_OUTPUT = "file_merge_output";
+    String FILE_MERGE_OUTPUT = "file_merge";
 
     @Input(FILE_MERGE_INPUT)
     SubscribableChannel fileMergeInput();

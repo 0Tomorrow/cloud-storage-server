@@ -5,7 +5,8 @@ import com.tlf.cloud.storage.core.bo.req.DoFileReq;
 import com.tlf.cloud.storage.core.bo.req.FileInfoReq;
 import com.tlf.cloud.storage.core.bo.resp.FileInfoResp;
 import com.tlf.cloud.storage.core.bo.resp.PreviewResp;
-import com.tlf.commonlang.bo.RespBase;
+import com.tlf.common.lang.annotation.LogIgnore;
+import com.tlf.common.lang.bo.RespBase;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,6 +38,7 @@ public class FileController {
         return new RespBase<>(mergeCode);
     }
 
+    @LogIgnore
     @ApiOperation(value = "文件分片上传", response = RespBase.class, produces = MediaType.MULTIPART_FORM_DATA_VALUE)
     @RequestMapping(value = "/sliceUpload", method = RequestMethod.POST, consumes = {"multipart/form-data"})
     public RespBase sliceUpload(MultipartFile file, Integer index, String mergeCode) {

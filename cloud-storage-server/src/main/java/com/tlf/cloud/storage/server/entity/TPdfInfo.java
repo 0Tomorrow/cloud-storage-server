@@ -1,6 +1,6 @@
 package com.tlf.cloud.storage.server.entity;
 
-import com.tlf.commondata.entity.BaseEntity;
+import com.tlf.common.data.entity.BaseEntity;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 

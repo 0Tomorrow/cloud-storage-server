@@ -1,6 +1,6 @@
 package com.tlf.cloud.storage.server.aop;
 
-import com.tlf.commonlang.aop.GlobalLogAspect;
+import com.tlf.common.lang.aop.GlobalLogAspect;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Pointcut;
 import org.springframework.stereotype.Component;
@@ -9,8 +9,8 @@ import org.springframework.stereotype.Component;
 @Component
 public class LogAspect extends GlobalLogAspect {
 
-    @Pointcut("execution(public * com.tlf.cloud.storage.server.controller.*.*(..)) " +
-            "&& !execution(public * com.tlf.cloud.storage.server.controller.FileController.sliceUpload(..))")
+    @Pointcut("within(com.tlf.cloud.storage.server.controller..*) " +
+            "&& !@annotation(com.tlf.common.lang.annotation.LogIgnore)")
     public void controllerLogService() {}
 
 }

@@ -1,29 +1,30 @@
 package com.tlf.cloud.storage.server.service;
 
 import com.tlf.cloud.storage.server.bo.MqSliceInfo;
+import com.tlf.cloud.storage.server.bo.UploadInfo;
 import com.tlf.cloud.storage.server.config.IconConfig;
 import com.tlf.cloud.storage.server.config.PathConfig;
 import com.tlf.cloud.storage.server.config.PreviewConfig;
 import com.tlf.cloud.storage.server.entity.TFileInfo;
 import com.tlf.cloud.storage.server.entity.TPdfInfo;
-import com.tlf.cloud.storage.server.entity.TUploadInfo;
 import com.tlf.cloud.storage.server.file.FileUtil;
 import com.tlf.cloud.storage.server.file.TempFileUtil;
 import com.tlf.cloud.storage.server.mq.MqFileService;
 import com.tlf.cloud.storage.server.repository.FileRepo;
 import com.tlf.cloud.storage.server.repository.IndexRepo;
 import com.tlf.cloud.storage.server.repository.PdfRepo;
-import com.tlf.cloud.storage.server.repository.UploadRepo;
 import com.tlf.cloud.storage.core.bo.req.FileInfoReq;
 import com.tlf.cloud.storage.core.bo.resp.FileInfoResp;
 import com.tlf.cloud.storage.core.bo.resp.PreviewResp;
 import com.tlf.cloud.storage.core.enums.FileState;
-import com.tlf.commonlang.exception.MyException;
-import com.tlf.commonlang.util.MyBeanUtils;
-import com.tlf.commonlang.util.StringEncoder;
+import com.tlf.cloud.storage.server.service.cache.FileCacheService;
+import com.tlf.common.lang.exception.MyException;
+import com.tlf.common.lang.util.MyBeanUtils;
+import com.tlf.common.lang.util.StringEncoder;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.ArrayList;
@@ -48,14 +49,15 @@ public class FileService {
     IndexRepo indexRepo;
 
     @Autowired
-    UploadRepo uploadRepo;
-
-    @Autowired
     MqFileService mqFileService;
 
     @Autowired
     PdfRepo pdfRepo;
 
+    @Autowired
+    FileCacheService fileCacheService;
+
+    @Transactional
     public List<FileInfoResp> findFile(Long account, String path) {
         if (account == null) {
             throw new MyException("用户未登录");
@@ -119,7 +121,8 @@ public class FileService {
         return false;
     }
 
-    private String saveFileInfoAndUpdateInfo(FileInfoReq fileInfo) {
+    @Transactional
+    public String saveFileInfoAndUpdateInfo(FileInfoReq fileInfo) {
         Long account = fileInfo.getUpdateBy();
         String path = fileInfo.getPath();
         String fileName = fileInfo.getFileName();
@@ -132,29 +135,30 @@ public class FileService {
         try {
             tFileInfo = fileRepo.save(tFileInfo);
         } catch (Exception e) {
-            throw new MyException("save tFileInfo时出错: " + tFileInfo.getFileName());
+            throw new MyException("save tFileInfo时出错: " + tFileInfo + "\n" + e.getMessage());
         }
 
-        TUploadInfo tUploadInfo = new TUploadInfo();
-        tUploadInfo.setTFileInfo(tFileInfo);
-        tUploadInfo.setFileState(FileState.HANDSHAKE.getCode());
-        tUploadInfo.setMergeCode(StringEncoder.encodeByMD5(account + ":" + System.currentTimeMillis()));
-        tUploadInfo.setUploadCount(0);
-        tUploadInfo.setSliceSize(fileInfo.getSliceSize());
-        tUploadInfo.setSliceCount(fileInfo.getSliceCount());
+        UploadInfo uploadInfo = new UploadInfo();
+        uploadInfo.setFileId(tFileInfo.getId());
+        uploadInfo.setFileState(FileState.HANDSHAKE.getCode());
+        uploadInfo.setMergeCode(StringEncoder.encodeByMD5(account + ":" + System.currentTimeMillis()));
+        uploadInfo.setUploadCount(0);
+        uploadInfo.setSliceSize(fileInfo.getSliceSize());
+        uploadInfo.setSliceCount(fileInfo.getSliceCount());
         try {
-            uploadRepo.save(tUploadInfo);
+            fileCacheService.putUploadInfo(uploadInfo.getMergeCode(), uploadInfo);
         } catch (Exception e) {
-            throw new MyException("save tUploadInfo时出错: " + tFileInfo.getFileName());
+            throw new MyException("save UploadInfo时出错: "  + e.getMessage());
         }
 
-        return tUploadInfo.getMergeCode();
+        return uploadInfo.getMergeCode();
     }
 
+    @Transactional
     public void mqMerge(MultipartFile file, Integer index, String mergeCode) {
-        TUploadInfo tUploadInfo = uploadRepo.findFirstByMergeCode(mergeCode);
+        UploadInfo uploadInfo = fileCacheService.getUploadInfo(mergeCode);
 
-        if (null == tUploadInfo) {
+        if (null == uploadInfo) {
             throw new MyException("文件识别码不存在: " + mergeCode);
         }
 
@@ -171,17 +175,19 @@ public class FileService {
         mqFileService.fileMergeOutput(sliceInfo);
     }
 
+    @Transactional
     public void merge(MqSliceInfo sliceInfo) {
         byte[] file = sliceInfo.getFile();
         int index = sliceInfo.getIndex();
         String mergeCode = sliceInfo.getMergeCode();
-        TUploadInfo tUploadInfo = uploadRepo.findFirstByMergeCode(mergeCode);
-        String path = tUploadInfo.getTFileInfo().getIndexInfo().getPath();
-        Long account = tUploadInfo.getTFileInfo().getUpdateBy();
-        String fileName = tUploadInfo.getTFileInfo().getFileName();
+        UploadInfo uploadInfo = fileCacheService.getUploadInfo(mergeCode);
+        TFileInfo tFileInfo = fileRepo.findOne(uploadInfo.getFileId());
+        String path = tFileInfo.getIndexInfo().getPath();
+        Long account = tFileInfo.getUpdateBy();
+        String fileName = tFileInfo.getFileName();
 
         String tempPath = pathConfig.getTempPath(account, path, fileName);
-        Long sliceSize = tUploadInfo.getSliceSize();
+        Long sliceSize = uploadInfo.getSliceSize();
 
         Long pos = index * sliceSize;
         log.info("start merge file : {}, index : {}", tempPath, index);
@@ -192,40 +198,39 @@ public class FileService {
         }
         String filePath = pathConfig.getAbsoluteFilePath(account, path, fileName);
         FileUtil.changeName(tempPath, filePath);
+        log.info("finish merge file : {}", filePath);
     }
 
     private synchronized boolean isFinish(String mergeCode) {
-        TUploadInfo tUploadInfo = uploadRepo.findFirstByMergeCode(mergeCode);
-        Integer uploadCount = tUploadInfo.getUploadCount();
-        Integer sliceCount = tUploadInfo.getSliceCount();
+        UploadInfo uploadInfo = fileCacheService.getUploadInfo(mergeCode);
+        Integer uploadCount = uploadInfo.getUploadCount();
+        Integer sliceCount = uploadInfo.getSliceCount();
         uploadCount++;
         if (uploadCount.equals(sliceCount)) {
-            log.info("upload finished, file : {}", tUploadInfo);
-            tUploadInfo.setUploadCount(uploadCount);
-            tUploadInfo.setFileState(FileState.FINISH.getCode());
-            uploadRepo.save(tUploadInfo);
+            fileCacheService.deleteUploadInfo(mergeCode);
             return true;
         }
-        tUploadInfo.setUploadCount(uploadCount);
-        tUploadInfo.setFileState(FileState.UPLOADING.getCode());
-        uploadRepo.save(tUploadInfo);
+        uploadInfo.setUploadCount(uploadCount);
+        uploadInfo.setFileState(FileState.UPLOADING.getCode());
+        fileCacheService.putUploadInfo(uploadInfo.getMergeCode(), uploadInfo);
         return false;
     }
 
 //    @Scheduled(cron = "0/2 * * * * *")
+    @Transactional
     public void deleteFile(String id) {
-        TFileInfo tFileInfo = fileRepo.getOne(Long.parseLong(id));
+        TFileInfo tFileInfo = fileRepo.findOne(Long.parseLong(id));
         if (tFileInfo == null) {
             throw new MyException("id不存在");
         }
-        uploadRepo.deleteAllByTFileInfo(Long.parseLong(id));
         fileRepo.delete(Long.parseLong(id));
         String absoluteFilePath = pathConfig.getAbsoluteFilePath(tFileInfo);
         FileUtil.deleteFile(absoluteFilePath);
     }
 
+    @Transactional
     public List<PreviewResp> preview(String id) {
-        TFileInfo tFileInfo = fileRepo.getOne(Long.parseLong(id));
+        TFileInfo tFileInfo = fileRepo.findOne(Long.parseLong(id));
         if (tFileInfo == null) {
             throw new MyException("id不存在");
         }
@@ -246,7 +251,7 @@ public class FileService {
     }
 
     public String getDownloadPath(String id) {
-        TFileInfo tFileInfo = fileRepo.getOne(Long.parseLong(id));
+        TFileInfo tFileInfo = fileRepo.findOne(Long.parseLong(id));
         if (tFileInfo == null) {
             throw new MyException("id不存在");
         }
@@ -257,9 +262,10 @@ public class FileService {
 //        TFileInfo tFileInfo = fileRepo.findFirstByUpdateByAndPathAndFileName(account, relativePath, fileName);
         return "/cloud_storage/user_file/" + account + relativePath + fileName;
     }
-    
+
+    @Transactional
     public void rename(String id, String newName) {
-        TFileInfo tFileInfo = fileRepo.getOne(Long.parseLong(id));
+        TFileInfo tFileInfo = fileRepo.findOne(Long.parseLong(id));
         newName = newName + "." + tFileInfo.getType();
         if (existFileName(tFileInfo.getIndexInfo().getId(), newName)) {
             throw new MyException("新文件名已存在");

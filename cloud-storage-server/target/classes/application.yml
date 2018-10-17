@@ -20,7 +20,7 @@ spring:
     username: root
     password: root
   redis:
-    database: 0
+    database: 2
     host: localhost
     port: 6379
     password:
@@ -40,6 +40,14 @@ spring:
 #    show-sql: true
     generate-ddl: true
     database: mysql
+  cloud:
+    stream:
+      bindings:
+        file_merge_input:
+          destination: file_merge
+          group: file.group
+          consumer:
+            concurrency: 5
 
 cloud-storage:
   icon:
